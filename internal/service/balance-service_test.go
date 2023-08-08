@@ -25,7 +25,7 @@ func TestGetBalance(t *testing.T) {
 
 	s := NewBalanceService(r)
 	totalAmount, err := s.GetBalance(context.Background(), uuid.New())
-	
+
 	require.NoError(t, err)
 	require.Equal(t, float64(502.6), totalAmount)
 }

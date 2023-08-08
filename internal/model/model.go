@@ -13,14 +13,15 @@ type Profile struct {
 	RefreshToken []byte
 }
 
-// Profile contains fields that we have in our postgresql table profiles
+// SignUpRequest contains fields that we have in our postgresql table profiles
 type SignUpRequest struct {
-	Age          int32 `json:"age" validate:"gte=18,lte=120" form:"age"`
-	Username     string `json:"username" validate:"required,min=4,max=20" form:"username"`
-	Country      string `json:"country" validate:"required,min=2" form:"country"`
-	Password     string `json:"password" validate:"required,min=4" form:"password"`
+	Age      int32  `json:"age" validate:"gte=18,lte=120" form:"age"`
+	Username string `json:"username" validate:"required,min=4,max=20" form:"username"`
+	Country  string `json:"country" validate:"required,min=2" form:"country"`
+	Password string `json:"password" validate:"required,min=4" form:"password"`
 }
 
+// LoginRequest contains fields that we use for bind the username and password
 type LoginRequest struct {
 	Username string `json:"username" validate:"required,min=4,max=20" form:"username"`
 	Password string `json:"password" validate:"required,min=4,max=20" form:"password"`

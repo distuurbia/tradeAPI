@@ -1,3 +1,4 @@
+// Package handler contains all work with handling the requests
 package handler
 
 import (
@@ -38,7 +39,7 @@ type TradeAPIHandler struct {
 }
 
 // NewTradeAPIHandler creates an object of *TradeAPIHandler filled with provided fields
-func NewTradeApiHandler(profileSrvc ProfileService, balanceSrvc BalanceService, validate *validator.Validate) *TradeAPIHandler {
+func NewTradeAPIHandler(profileSrvc ProfileService, balanceSrvc BalanceService, validate *validator.Validate) *TradeAPIHandler {
 	return &TradeAPIHandler{profileSrvc: profileSrvc, balanceSrvc: balanceSrvc, validate: validate}
 }
 
@@ -70,8 +71,9 @@ func (h *TradeAPIHandler) SignUp(c echo.Context) error {
 		logrus.Errorf("TradeAPIHandler -> SignUp -> %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to signup profile")
 	}
+	output := fmt.Sprintf("created a profile with ID: %v", profile.ID.String())
 
-	return c.JSON(http.StatusCreated, "created a profile with ID: "+profile.ID.String())
+	return c.JSON(http.StatusCreated, output)
 }
 
 // Login validates fields of loginRequest and cals the method Login of ProfileService
@@ -148,10 +150,12 @@ func (h *TradeAPIHandler) DeleteProfile(c echo.Context) error {
 		logrus.Errorf("TradeAPIHandler -> DeleteProfile -> %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to delete balances with provided id")
 	}
-	return c.JSON(http.StatusOK, "deleted profile and its balance with ID: "+profileID.String())
+	output := fmt.Sprintf("deleted profile and its balance with ID: %v", profileID.String())
+
+	return c.JSON(http.StatusOK, output)
 }
 
-// AddBBalanceChange extcracts profileID from auth header and calls AddBalanceChange method of BalanceService
+// AddBalanceChange extcracts profileID from auth header and calls AddBalanceChange method of BalanceService
 func (h *TradeAPIHandler) AddBalanceChange(c echo.Context) error {
 	authHeaderString := c.Request().Header.Get("Authorization")
 	profileID, err := h.profileSrvc.ExtractIDFromAuthHeader(authHeaderString)
@@ -173,11 +177,20 @@ func (h *TradeAPIHandler) AddBalanceChange(c echo.Context) error {
 	err = h.validate.StructCtx(c.Request().Context(), bindAmount)
 	if err != nil {
 		logrus.Errorf("TradeAPIHandler -> AddBalanceChange -> %v", err)
-		return echo.NewHTTPError(http.StatusBadRequest, "failed to validate id")
+		return echo.NewHTTPError(http.StatusBadRequest, "failed to validate amount")
 	}
 
 	action := "deposited for"
 	if strings.Contains(c.Request().RequestURI, "withdraw") {
+		totalBalance, errGetBalance := h.balanceSrvc.GetBalance(c.Request().Context(), profileID)
+		if errGetBalance != nil {
+			logrus.Errorf("TradeAPIHandler -> AddBalanceChange -> %v", errGetBalance)
+			return echo.NewHTTPError(http.StatusBadRequest, "failed to check balance of profile with ID: "+profileID.String())
+		}
+		if totalBalance < bindAmount.Amount {
+			logrus.Errorf("TradeAPIHandler -> AddBalanceChange -> %v", errGetBalance)
+			return echo.NewHTTPError(http.StatusBadRequest, "don't have enough balance on profile with ID: "+profileID.String())
+		}
 		bindAmount.Amount *= -1
 		action = "withdrawed from"
 	}
@@ -187,8 +200,9 @@ func (h *TradeAPIHandler) AddBalanceChange(c echo.Context) error {
 		logrus.Errorf("TradeAPIHandler -> AddBalanceChange -> %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to be "+action+" profile with ID: "+profileID.String())
 	}
+	output := fmt.Sprintf("Successfully %v %v profile with ID: %v", action, math.Abs(bindAmount.Amount), profileID)
 
-	return c.JSON(http.StatusOK, fmt.Sprintf("Successfully %v %v profile with ID: %v", action, math.Abs(bindAmount.Amount), profileID))
+	return c.JSON(http.StatusOK, output)
 }
 
 // GetBalance extcracts profileID from auth header and calls method GetBalance of BalanceService
@@ -205,5 +219,6 @@ func (h *TradeAPIHandler) GetBalance(c echo.Context) error {
 		logrus.Errorf("TradeAPIHandler -> DeleteProfile -> %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to parse id")
 	}
-	return c.JSON(http.StatusOK, fmt.Sprintf("Total balance: %v of profile with ID: %v", totalBalance, profileID))
+	output := fmt.Sprintf("Total balance: %v of profile with ID: %v", totalBalance, profileID)
+	return c.JSON(http.StatusOK, output)
 }

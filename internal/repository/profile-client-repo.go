@@ -58,6 +58,7 @@ func (r *ProfileClientRepository) GetRefreshTokenByID(ctx context.Context, profi
 	if err != nil {
 		return nil, fmt.Errorf("ProfileClientRepository -> GetRefreshTokenByID: %w", err)
 	}
+
 	return resp.HashedRefresh, nil
 }
 

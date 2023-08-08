@@ -12,7 +12,6 @@ type BalanceClientRepository interface {
 	AddBalanceChange(ctx context.Context, profileID uuid.UUID, amount float64) error
 	GetBalance(ctx context.Context, profileID uuid.UUID) (float64, error)
 	DeleteProfilesBalance(ctx context.Context, profileID uuid.UUID) error
-
 }
 
 // BalanceService contains an object of ProfileRepository and config with env variables
@@ -25,7 +24,7 @@ func NewBalanceService(r BalanceClientRepository) *BalanceService {
 	return &BalanceService{r: r}
 }
 
-// AddBalanceChange calls method AddBalanceChange of repository 
+// AddBalanceChange calls method AddBalanceChange of repository
 func (s *BalanceService) AddBalanceChange(ctx context.Context, profileID uuid.UUID, amount float64) error {
 	err := s.r.AddBalanceChange(ctx, profileID, amount)
 	if err != nil {
@@ -43,7 +42,7 @@ func (s *BalanceService) GetBalance(ctx context.Context, profileID uuid.UUID) (f
 	return totalAmount, nil
 }
 
-// DeleteProfilesBalance calls method DeleteProfilesBalance of repository 
+// DeleteProfilesBalance calls method DeleteProfilesBalance of repository
 func (s *BalanceService) DeleteProfilesBalance(ctx context.Context, profileID uuid.UUID) error {
 	err := s.r.DeleteProfilesBalance(ctx, profileID)
 	if err != nil {

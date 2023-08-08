@@ -66,5 +66,3 @@ func TestDeleteProfile(t *testing.T) {
 	err := r.DeleteProfile(context.Background(), testProfile.ID)
 	require.NoError(t, err)
 }
-
-

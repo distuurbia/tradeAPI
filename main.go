@@ -1,14 +1,15 @@
+// Package main contains the main goroutine and methods for creating clients for other microservices
 package main
 
 import (
 	"github.com/caarlos0/env"
-	profileProtocol "github.com/distuurbia/profile/protocol/profile"
 	balanceProtocol "github.com/distuurbia/balance/protocol/balance"
+	profileProtocol "github.com/distuurbia/profile/protocol/profile"
 	"github.com/distuurbia/tradeAPI/internal/config"
 	"github.com/distuurbia/tradeAPI/internal/handler"
+	customMiddleware "github.com/distuurbia/tradeAPI/internal/middleware"
 	"github.com/distuurbia/tradeAPI/internal/repository"
 	"github.com/distuurbia/tradeAPI/internal/service"
-	customMiddleware "github.com/distuurbia/tradeAPI/internal/middleware"
 	"github.com/go-playground/validator"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -33,7 +34,7 @@ func createBalanceClientConnection() (*grpc.ClientConn, error) {
 	return conn, nil
 }
 
-func main(){
+func main() {
 	var cfg config.Config
 	if err := env.Parse(&cfg); err != nil {
 		logrus.Errorf("main -> %v", err)
@@ -72,9 +73,9 @@ func main(){
 	profileSrvc := service.NewProfileService(profileRps, &cfg)
 	balanceSrvc := service.NewBalanceService(balanceRps)
 
-	h := handler.NewTradeApiHandler(profileSrvc, balanceSrvc, validate)
+	h := handler.NewTradeAPIHandler(profileSrvc, balanceSrvc, validate)
 
-	cm := customMiddleware.NewCustomMiddleware(*profileSrvc)
+	cm := customMiddleware.NewCustomMiddleware(profileSrvc)
 
 	e := echo.New()
 	e.Use(middleware.Logger())
@@ -89,7 +90,5 @@ func main(){
 	e.POST("/withdraw", h.AddBalanceChange, cm.JWTMiddleware)
 	e.GET("/getBalance", h.GetBalance, cm.JWTMiddleware)
 
-
 	e.Logger.Fatal(e.Start(":8080"))
-
 }

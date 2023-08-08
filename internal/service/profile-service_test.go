@@ -82,6 +82,17 @@ func TestGenerateJWT(t *testing.T) {
 	require.Equal(t, testID.String(), claims["id"])
 }
 
+func TestExtractTokenFromAuthHeader(t *testing.T) {
+	r := new(mocks.ProfileClientRepository)
+	s := NewProfileService(r, &cfg)
+
+	testStr := "Bearer someToken"
+	resStr := "someToken"
+	token, err := s.ExtractTokenFromAuthHeader(testStr)
+	require.NoError(t, err)
+	require.Equal(t, resStr, token)
+}
+
 func TestExtractIDFromAuthHeader(t *testing.T) {
 	r := new(mocks.ProfileClientRepository)
 	s := NewProfileService(r, &cfg)
@@ -89,7 +100,7 @@ func TestExtractIDFromAuthHeader(t *testing.T) {
 	testID := uuid.New()
 	testTokenString, err := s.GenerateJWTToken(accessTokenExpiration, testID)
 	require.NoError(t, err)
-	
+
 	extractedID, err := s.ExtractIDFromAuthHeader("Bearer " + testTokenString)
 	require.NoError(t, err)
 	require.Equal(t, testID, extractedID)

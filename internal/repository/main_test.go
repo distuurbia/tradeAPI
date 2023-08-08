@@ -7,6 +7,7 @@ import (
 	"github.com/distuurbia/tradeAPI/internal/model"
 	"github.com/google/uuid"
 )
+
 var (
 	testProfile = model.Profile{
 		ID:           uuid.New(),

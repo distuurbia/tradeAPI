@@ -3,8 +3,6 @@ github.com/caarlos0/env v3.5.0+incompatible/go.mod h1:tdCsowwCzMLdkqRYDlHpZCp2Uo
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/distuurbia/balance v0.0.0-20230806140754-4e65ce2d3230 h1:E+YD6nWNdK4bnH52ICwUWwk8ee+abyYrh02wzHDw5Uw=
-github.com/distuurbia/balance v0.0.0-20230806140754-4e65ce2d3230/go.mod h1:xE9xG7lX9VTGQLEE8Zc7DWc+SNb/fcPa1lca/a/u2ZI=
 github.com/distuurbia/balance v0.0.0-20230807090524-1b34aef416c7 h1:YsbcymhNxze8wRH8PX0I0DYyeY4+n8XIuxF2MWud5Yg=
 github.com/distuurbia/balance v0.0.0-20230807090524-1b34aef416c7/go.mod h1:xE9xG7lX9VTGQLEE8Zc7DWc+SNb/fcPa1lca/a/u2ZI=
 github.com/distuurbia/profile v0.0.0-20230804090859-83cf87de16cb h1:7uRNgJNZYLqoC/JGNVZNv/+4LgNHvD05lKsNb/VXZfk=

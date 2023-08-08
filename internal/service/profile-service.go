@@ -33,7 +33,7 @@ type ProfileClientRepository interface {
 
 // ProfileService contains an object of ProfileRepository and config with env variables
 type ProfileService struct {
-	r ProfileClientRepository
+	r   ProfileClientRepository
 	cfg *config.Config
 }
 
@@ -105,7 +105,7 @@ func (s *ProfileService) SignUp(ctx context.Context, profile *model.Profile) err
 }
 
 // Login checks if profile with such username exists, compare given password and hashed password in db then generates access and refresh tokens
-func (s *ProfileService) Login(ctx context.Context, username string, password []byte) (*model.TokenPair, error){
+func (s *ProfileService) Login(ctx context.Context, username string, password []byte) (*model.TokenPair, error) {
 	id, hashedPassword, err := s.r.GetPasswordAndIDByUsername(ctx, username)
 	if err != nil {
 		return nil, fmt.Errorf("ProfileService ->  Login -> %w", err)
@@ -146,7 +146,7 @@ func (s *ProfileService) ValidateToken(tokenString string) (*jwt.Token, error) {
 }
 
 // ExtractTokenFromAuthHeader extracts token string auth header
-func (s *ProfileService) ExtractTokenFromAuthHeader(authHeaderString string) (string, error){
+func (s *ProfileService) ExtractTokenFromAuthHeader(authHeaderString string) (string, error) {
 	parts := strings.Split(authHeaderString, " ")
 	if len(parts) != 2 || !strings.EqualFold(strings.ToLower(parts[0]), "bearer") {
 		return "", fmt.Errorf("ExtractTokenFromAuthHeader -> error: failed to extract token from auth header")
@@ -156,7 +156,7 @@ func (s *ProfileService) ExtractTokenFromAuthHeader(authHeaderString string) (st
 }
 
 // ExtractIDFromAuthHeader extracts profileID from token that contained in auth header
-func (s *ProfileService) ExtractIDFromAuthHeader(authHeaderString string) (uuid.UUID, error){
+func (s *ProfileService) ExtractIDFromAuthHeader(authHeaderString string) (uuid.UUID, error) {
 	tokenString, err := s.ExtractTokenFromAuthHeader(authHeaderString)
 
 	if err != nil {
@@ -185,8 +185,9 @@ func (s *ProfileService) TokensIDCompare(tokenPair *model.TokenPair) (uuid.UUID,
 
 	var accessID uuid.UUID
 	var uuidID uuid.UUID
+	var err error
 	if claims, ok := accessToken.Claims.(jwt.MapClaims); ok {
-		uuidID, err := uuid.Parse(claims["id"].(string))
+		uuidID, err = uuid.Parse(claims["id"].(string))
 		if err != nil {
 			return uuid.Nil, fmt.Errorf("TokensIDCompare -> %w", err)
 		}
@@ -245,6 +246,7 @@ func (s *ProfileService) Refresh(ctx context.Context, tokenPair *model.TokenPair
 	return tokenPair, nil
 }
 
+// DeleteProfile calls method DeleteProfile of ProfileClientRepository
 func (s *ProfileService) DeleteProfile(ctx context.Context, id uuid.UUID) error {
 	err := s.r.DeleteProfile(ctx, id)
 	if err != nil {
