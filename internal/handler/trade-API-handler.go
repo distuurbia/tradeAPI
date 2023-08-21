@@ -54,7 +54,7 @@ func (h *TradeAPIHandler) SignUp(c echo.Context) error {
 
 	err = h.validate.StructCtx(c.Request().Context(), signUpRequest)
 	if err != nil {
-		logrus.Errorf("TradeAPIHandler -> SignUp -> %v", err)
+		logrus.WithField("signUpRequest", signUpRequest).Errorf("TradeAPIHandler -> SignUp -> %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to validate profile")
 	}
 
@@ -68,7 +68,7 @@ func (h *TradeAPIHandler) SignUp(c echo.Context) error {
 
 	err = h.profileSrvc.SignUp(c.Request().Context(), &profile)
 	if err != nil {
-		logrus.Errorf("TradeAPIHandler -> SignUp -> %v", err)
+		logrus.WithField("profile", profile).Errorf("TradeAPIHandler -> SignUp -> %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to signup profile")
 	}
 	output := fmt.Sprintf("created a profile with ID: %v", profile.ID.String())
@@ -88,13 +88,16 @@ func (h *TradeAPIHandler) Login(c echo.Context) error {
 
 	err = h.validate.StructCtx(c.Request().Context(), loginRequest)
 	if err != nil {
-		logrus.Errorf("TradeAPIHandler -> Login -> %v", err)
+		logrus.WithField("loginRequest", loginRequest).Errorf("TradeAPIHandler -> Login -> %v", err)
 		return echo.NewHTTPError(http.StatusUnauthorized, "failed to validate login or password")
 	}
 
 	tokenPair, err := h.profileSrvc.Login(c.Request().Context(), loginRequest.Username, []byte(loginRequest.Password))
 	if err != nil {
-		logrus.Errorf("TradeAPIHandler -> Login -> %v", err)
+		logrus.WithFields(logrus.Fields{
+			"loginRequest.Username": loginRequest.Username,
+			"loginRequest.Password": loginRequest.Password,
+		}).Errorf("TradeAPIHandler -> Login -> %v", err)
 		return echo.NewHTTPError(http.StatusUnauthorized, "failed to login")
 	}
 
@@ -115,13 +118,13 @@ func (h *TradeAPIHandler) Refresh(c echo.Context) error {
 
 	err = h.validate.StructCtx(c.Request().Context(), tokenPair)
 	if err != nil {
-		logrus.Errorf("TradeAPIHandler -> Refresh -> %v", err)
+		logrus.WithField("tokenPair", tokenPair).Errorf("TradeAPIHandler -> Refresh -> %v", err)
 		return echo.NewHTTPError(http.StatusUnauthorized, "failed to validate access or refresh token")
 	}
 
 	newTokenPair, err := h.profileSrvc.Refresh(c.Request().Context(), &tokenPair)
 	if err != nil {
-		logrus.Errorf("TradeAPIHandler -> Refresh -> %v", err)
+		logrus.WithField("tokenPair", tokenPair).Errorf("TradeAPIHandler -> Refresh -> %v", err)
 		return echo.NewHTTPError(http.StatusUnauthorized, "failed to generate new tokenPair")
 	}
 
@@ -136,18 +139,18 @@ func (h *TradeAPIHandler) DeleteProfile(c echo.Context) error {
 	authHeaderString := c.Request().Header.Get("Authorization")
 	profileID, err := h.profileSrvc.ExtractIDFromAuthHeader(authHeaderString)
 	if err != nil {
-		logrus.Errorf("TradeAPIHandler -> DeleteProfile -> %v", err)
+		logrus.WithField("authHeaderString", authHeaderString).Errorf("TradeAPIHandler -> DeleteProfile -> %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "failed exctract ID from accessToken")
 	}
 
 	err = h.profileSrvc.DeleteProfile(c.Request().Context(), profileID)
 	if err != nil {
-		logrus.Errorf("TradeAPIHandler -> DeleteProfile -> %v", err)
+		logrus.WithField("profileID", profileID).Errorf("TradeAPIHandler -> DeleteProfile -> %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to delete profile with provided id")
 	}
 	err = h.balanceSrvc.DeleteProfilesBalance(c.Request().Context(), profileID)
 	if err != nil {
-		logrus.Errorf("TradeAPIHandler -> DeleteProfile -> %v", err)
+		logrus.WithField("profileID", profileID).Errorf("TradeAPIHandler -> DeleteProfile -> %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to delete balances with provided id")
 	}
 	output := fmt.Sprintf("deleted profile and its balance with ID: %v", profileID.String())
@@ -160,7 +163,7 @@ func (h *TradeAPIHandler) AddBalanceChange(c echo.Context) error {
 	authHeaderString := c.Request().Header.Get("Authorization")
 	profileID, err := h.profileSrvc.ExtractIDFromAuthHeader(authHeaderString)
 	if err != nil {
-		logrus.Errorf("TradeAPIHandler -> AddBalanceChange -> %v", err)
+		logrus.WithField("authHeaderString", authHeaderString).Errorf("TradeAPIHandler -> AddBalanceChange -> %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "failed exctract ID from accessToken")
 	}
 
@@ -176,7 +179,7 @@ func (h *TradeAPIHandler) AddBalanceChange(c echo.Context) error {
 
 	err = h.validate.StructCtx(c.Request().Context(), bindAmount)
 	if err != nil {
-		logrus.Errorf("TradeAPIHandler -> AddBalanceChange -> %v", err)
+		logrus.WithField("bindAmount", bindAmount).Errorf("TradeAPIHandler -> AddBalanceChange -> %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to validate amount")
 	}
 
@@ -184,11 +187,11 @@ func (h *TradeAPIHandler) AddBalanceChange(c echo.Context) error {
 	if strings.Contains(c.Request().RequestURI, "withdraw") {
 		totalBalance, errGetBalance := h.balanceSrvc.GetBalance(c.Request().Context(), profileID)
 		if errGetBalance != nil {
-			logrus.Errorf("TradeAPIHandler -> AddBalanceChange -> %v", errGetBalance)
+			logrus.WithField("profileID", profileID).Errorf("TradeAPIHandler -> AddBalanceChange -> %v", errGetBalance)
 			return echo.NewHTTPError(http.StatusBadRequest, "failed to check balance of profile with ID: "+profileID.String())
 		}
 		if totalBalance < bindAmount.Amount {
-			logrus.Errorf("TradeAPIHandler -> AddBalanceChange -> %v", errGetBalance)
+			logrus.WithField("profileID", profileID).Errorf("TradeAPIHandler -> AddBalanceChange -> %v", errGetBalance)
 			return echo.NewHTTPError(http.StatusBadRequest, "don't have enough balance on profile with ID: "+profileID.String())
 		}
 		bindAmount.Amount *= -1
@@ -197,7 +200,10 @@ func (h *TradeAPIHandler) AddBalanceChange(c echo.Context) error {
 
 	err = h.balanceSrvc.AddBalanceChange(c.Request().Context(), profileID, bindAmount.Amount)
 	if err != nil {
-		logrus.Errorf("TradeAPIHandler -> AddBalanceChange -> %v", err)
+		logrus.WithFields(logrus.Fields{
+			"profileID":         profileID,
+			"bindAmount.Amount": bindAmount.Amount,
+		}).Errorf("TradeAPIHandler -> AddBalanceChange -> %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to be "+action+" profile with ID: "+profileID.String())
 	}
 	output := fmt.Sprintf("Successfully %v %v profile with ID: %v", action, math.Abs(bindAmount.Amount), profileID)
@@ -210,13 +216,13 @@ func (h *TradeAPIHandler) GetBalance(c echo.Context) error {
 	authHeaderString := c.Request().Header.Get("Authorization")
 	profileID, err := h.profileSrvc.ExtractIDFromAuthHeader(authHeaderString)
 	if err != nil {
-		logrus.Errorf("TradeAPIHandler -> AddBalanceChange -> %v", err)
+		logrus.WithField("authHeaderString", authHeaderString).Errorf("TradeAPIHandler -> AddBalanceChange -> %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "failed exctract ID from accessToken")
 	}
 
 	totalBalance, err := h.balanceSrvc.GetBalance(c.Request().Context(), profileID)
 	if err != nil {
-		logrus.Errorf("TradeAPIHandler -> DeleteProfile -> %v", err)
+		logrus.WithField("profileID", profileID).Errorf("TradeAPIHandler -> DeleteProfile -> %v", err)
 		return echo.NewHTTPError(http.StatusBadRequest, "failed to parse id")
 	}
 	output := fmt.Sprintf("Total balance: %v of profile with ID: %v", totalBalance, profileID)
